@@ -1,13 +1,27 @@
-export default class DataService<T> {
-  private readonly _src;
+type BarData = {
+  Time: number;
+  Open: number;
+  High: number;
+  Low: number;
+  Close: number;
+  TickVolume: number;
+};
+interface DataModel {
+  ChunkStart: number;
+  Bars: BarData[];
+}
+
+export type DataResDto = [firstBar: DataModel, secondBar: DataModel];
+export default class DataService {
+  readonly #src;
   constructor(src: string) {
-    this._src = src;
+    this.#src = src;
   }
-  public async get(): Promise<T[]> {
+  public async get(): Promise<DataResDto> {
     try {
-      return await fetch(this._src).then((data) => data.json());
+      return await fetch(this.#src).then((data) => data.json());
     } catch (e) {
-      throw new Error(`Error fetching data from ${this._src}`);
+      throw new Error(`Error fetching data from ${this.#src}`);
     }
   }
 }

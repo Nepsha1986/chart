@@ -7,4 +7,4 @@ const dataSrc =
   "https://beta.forextester.com/data/api/Metadata/bars/chunked?Broker=Advanced&Symbol=USDJPY&Timeframe=1&Start=57674&End=59113&UseMessagePack=false";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML =
-  `<canvas-chart src=${dataSrc} width="600" height="350" />`;
+  `<canvas-chart src=${dataSrc} />`;

@@ -1,5 +1,5 @@
 import DataService from "./DataService.ts";
-import CanvasRenderer from "./CanvasRenderer.ts";
+import DataDrawer from "./DataDrawer.ts";
 
 interface ElProps {
   src: string;
@@ -9,20 +9,16 @@ interface ElProps {
 
 type ObservedAttr = keyof ElProps;
 
-export class Chart<T> extends HTMLElement {
-  private service: DataService<T>;
-  private canvasRenderer: CanvasRenderer;
-  private data: T[];
+export class Chart extends HTMLElement {
+  private service: DataService;
+  private drawer: DataDrawer;
   static observedAttributes: ObservedAttr[] = ["src", "width", "height"];
 
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this.service = new DataService<T>(this.src);
-    this.canvasRenderer = new CanvasRenderer(
-      parseInt(this.width),
-      parseInt(this.height),
-    );
+    this.service = new DataService(this.src);
+    this.drawer = new DataDrawer();
 
     this.render();
   }
@@ -31,25 +27,12 @@ export class Chart<T> extends HTMLElement {
     return this.getAttribute("src") || "";
   }
 
-  get width(): string {
-    return this.getAttribute("width") || "";
-  }
-
-  get height(): string {
-    return this.getAttribute("height") || "";
-  }
-
   async connectedCallback() {
-    this.canvasRenderer.context.fillText("Loading, please wait...", 20, 20);
-    this.data = await this.getData();
-    this.canvasRenderer.context.clearRect(
-      0,
-      0,
-      parseInt(this.width),
-      parseInt(this.height),
-    );
+    const data = await this.getData();
+    this.drawer.init();
+    this.drawer.render(data);
   }
-  //
+
   private async getData() {
     try {
       return await this.service.get();
@@ -59,6 +42,6 @@ export class Chart<T> extends HTMLElement {
   }
 
   private render(): void {
-    this.shadowRoot?.appendChild(this.canvasRenderer.canvas);
+    this.shadowRoot?.appendChild(this.drawer.canvas);
   }
 }
