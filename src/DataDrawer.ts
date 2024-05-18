@@ -29,8 +29,10 @@ export default class DataDrawer {
     this.#renderer.drawDirections();
   }
 
-  render() {
-    const data = this.#data;
+  render(zoom: number = 1) {
+    this.#renderer.clear();
+    this.init();
+    const data = this.#data.slice(0, this.#data.length / zoom);
     const barsLength = data.length;
     const canvasWidth = this.canvas.width;
     const canvasHeight = this.canvas.height;
