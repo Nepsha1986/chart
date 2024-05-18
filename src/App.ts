@@ -11,6 +11,7 @@ export class Chart extends HTMLElement {
   #service: DataService;
   #drawer: DataDrawer | null = null;
   #zoom: number;
+  #mouseX: number = 0;
   static observedAttributes: ObservedAttr[] = ["src"];
 
   constructor() {
@@ -24,14 +25,19 @@ export class Chart extends HTMLElement {
   }
 
   _onMouseOver() {
+    this.addEventListener("mousemove", this._onMove);
     this.addEventListener("wheel", this._onWheel);
+  }
+
+  _onMove(event: MouseEvent) {
+    this.#mouseX = event.clientX;
   }
 
   _onWheel(event: WheelEvent) {
     event.preventDefault();
-    const delta = event.deltaY * 0.001;
+    const delta = event.deltaY * 0.00001;
     this.zoom = this.zoom + delta;
-    this.drawer.render(this.zoom);
+    this.drawer.render(this.zoom, this.#mouseX / this.drawer.canvas.width);
   }
 
   set zoom(delta: number) {
