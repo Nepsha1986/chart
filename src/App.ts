@@ -3,24 +3,30 @@ import DataDrawer from "./DataDrawer.ts";
 
 interface ElProps {
   src: string;
-  width: string;
-  height: string;
 }
 
 type ObservedAttr = keyof ElProps;
 
 export class Chart extends HTMLElement {
-  private service: DataService;
-  private drawer: DataDrawer;
-  static observedAttributes: ObservedAttr[] = ["src", "width", "height"];
+  #service: DataService;
+  #drawer: DataDrawer | null = null;
+  static observedAttributes: ObservedAttr[] = ["src"];
 
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this.service = new DataService(this.src);
-    this.drawer = new DataDrawer();
+    this.#service = new DataService(this.src);
+  }
 
-    this.render();
+  set drawer(drawer: DataDrawer) {
+    this.#drawer = drawer;
+  }
+
+  get drawer(): DataDrawer {
+    if (this.#drawer === null) {
+      throw new Error("Drawer is not set");
+    }
+    return this.#drawer;
   }
 
   get src(): string {
@@ -28,20 +34,25 @@ export class Chart extends HTMLElement {
   }
 
   async connectedCallback() {
-    const data = await this.getData();
+    const data = await this.#getData();
+    this.drawer = new DataDrawer(data[0].Bars);
     this.drawer.init();
-    this.drawer.render(data);
+    this.drawer.render();
+    this.#render();
   }
 
-  private async getData() {
+  async #getData() {
     try {
-      return await this.service.get();
+      return await this.#service.get();
     } catch (e) {
       throw new Error("Error while getting data");
     }
   }
 
-  private render(): void {
-    this.shadowRoot?.appendChild(this.drawer.canvas);
+  #render(): void {
+    if (this.shadowRoot && this.#drawer) {
+      this.shadowRoot.innerHTML = "";
+      this.shadowRoot.appendChild(this.#drawer.canvas);
+    }
   }
 }

@@ -1,14 +1,26 @@
 import CanvasRenderer from "./CanvasRenderer.ts";
-import { DataResDto } from "./DataService.ts";
+import { BarData } from "./DataService.ts";
+
+const getLowHigh = (bars: BarData[]): [number, number] =>
+  bars.reduce(
+    ([lowestLow, highestHigh], bar) => [
+      Math.min(lowestLow, bar.Low),
+      Math.max(highestHigh, bar.High),
+    ],
+    [bars[0].Low, bars[0].High],
+  );
 
 export default class DataDrawer {
   canvas: HTMLCanvasElement;
   #renderer: CanvasRenderer;
-  constructor() {
+  #data: BarData[];
+  constructor(data: BarData[]) {
     this.#renderer = new CanvasRenderer(
-      window.innerWidth - 100,
+      window.innerWidth - 20,
       window.innerWidth / 2,
     );
+
+    this.#data = data;
     this.canvas = this.#renderer.canvas;
   }
 
@@ -17,9 +29,33 @@ export default class DataDrawer {
     this.#renderer.drawDirections();
   }
 
-  render(data: DataResDto) {
-    data[0].Bars.forEach((i) => {
-      this.#renderer.drawBar(i.Time, i.Time + 10, 10, i.Low, "#da2626");
+  render() {
+    const data = this.#data;
+    const barsLength = data.length;
+    const canvasWidth = this.canvas.width;
+    const canvasHeight = this.canvas.height;
+    const xRatio = canvasWidth / (barsLength * 60);
+
+    const [minY, maxY] = getLowHigh(data);
+    const yRatio = canvasHeight / (maxY - minY);
+
+    data.forEach((i) => {
+      const color = i.Open > i.Close ? "#ff4846" : "#00b896";
+
+      this.#renderer.drawLine(
+        (i.Time + 30) * xRatio,
+        (i.Open - minY) * yRatio,
+        (i.Time + 30) * xRatio,
+        (i.Close - minY) * yRatio,
+        color,
+      );
+      this.#renderer.drawBar(
+        i.Time * xRatio,
+        (i.Low - minY) * yRatio,
+        60 * xRatio,
+        (i.High - i.Low) * yRatio,
+        color,
+      );
     });
   }
 }

@@ -9,22 +9,28 @@ export default class CanvasRenderer {
 
     this.context = canvas.getContext("2d")!;
     this.canvas = canvas;
+    this.changeOrigin();
 
     return this;
+  }
+
+  private changeOrigin() {
+    this.context.translate(0, this.canvas.height);
+    this.context.scale(1, -1);
   }
 
   drawDirections() {
     const ctx = this.context;
     const centerX = 10;
-    const centerY = this.canvas.height - 10;
+    const centerY = 10;
     const horLineLength = this.canvas.width - 15;
     const vertLineLength = this.canvas.height - 15;
 
     ctx.strokeStyle = "black";
     ctx.lineWidth = 2;
 
-    this.drawArrow(centerX, centerY, centerX, centerY - vertLineLength);
-    this.drawArrow(centerX, centerY, centerX + horLineLength, centerY);
+    this.drawArrow(centerX, centerY, centerX, vertLineLength);
+    this.drawArrow(centerX, centerY, horLineLength, centerY);
   }
 
   private drawArrow(fromX: number, fromY: number, toX: number, toY: number) {
@@ -34,7 +40,7 @@ export default class CanvasRenderer {
     const dy = toY - fromY;
     const angle = Math.atan2(dy, dx);
 
-    this.drawLine(fromX, fromY, toX, toY);
+    this.drawLine(fromX, fromY, toX, toY, "black");
 
     ctx.beginPath();
     ctx.moveTo(toX, toY);
@@ -56,8 +62,17 @@ export default class CanvasRenderer {
     ctx.fill();
   }
 
-  drawLine(fromX: number, fromY: number, toX: number, toY: number) {
+  drawLine(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+    color: string = "#ddd",
+  ) {
     const ctx = this.context;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+
     ctx.beginPath();
     ctx.moveTo(fromX, fromY);
     ctx.lineTo(toX, toY);
@@ -65,12 +80,8 @@ export default class CanvasRenderer {
   }
 
   drawGrid(cellSize: number) {
-    const ctx = this.context;
     const width = this.canvas.width;
     const height = this.canvas.height;
-
-    ctx.strokeStyle = "#ddd";
-    ctx.lineWidth = 1;
 
     for (let x = 0; x <= width; x += cellSize) {
       this.drawLine(x, 0, x, height);
@@ -84,6 +95,6 @@ export default class CanvasRenderer {
   drawBar(x: number, y: number, width: number, height: number, color: string) {
     const ctx = this.context;
     ctx.fillStyle = color;
-    ctx.fillRect(x, y - height, width, height);
+    ctx.fillRect(x, y, width, height);
   }
 }

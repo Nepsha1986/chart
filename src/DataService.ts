@@ -1,4 +1,4 @@
-type BarData = {
+export type BarData = {
   Time: number;
   Open: number;
   High: number;
@@ -6,7 +6,7 @@ type BarData = {
   Close: number;
   TickVolume: number;
 };
-interface DataModel {
+export interface DataModel {
   ChunkStart: number;
   Bars: BarData[];
 }
