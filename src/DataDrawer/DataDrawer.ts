@@ -1,25 +1,12 @@
-import CanvasRenderer from "./CanvasRenderer.ts";
-import { BarData } from "./DataService.ts";
-
-const getLowHigh = (bars: BarData[]): [number, number] =>
-  bars.reduce(
-    ([lowestLow, highestHigh], bar) => [
-      Math.min(lowestLow, bar.Low),
-      Math.max(highestHigh, bar.High),
-    ],
-    [bars[0].Low, bars[0].High],
-  );
-
-const getMinMax = (bars: BarData[]): [number, number] => {
-  return [bars[0].Time, bars[bars.length - 1].Time];
-};
+import CanvasRenderer from "../CanvasRenderer/CanvasRenderer.ts";
+import { BarData } from "../DataService/DataService.ts";
+import { getLowHigh, getMinMax } from "./_utils";
 
 export default class DataDrawer {
   canvas: HTMLCanvasElement;
   #renderer: CanvasRenderer;
   #firstIndexInView: number = 0;
   #lastIndexInView: number;
-  #dataInView: BarData[];
   #zoom: number;
   #mouseX: number;
   readonly #data: BarData[];
@@ -33,7 +20,6 @@ export default class DataDrawer {
     this.#zoom = 1;
     this.#mouseX = 0;
     this.#data = data;
-    this.#dataInView = data;
     this.canvas = this.#renderer.canvas;
     this.canvas.addEventListener("mouseover", this._onMouseOver.bind(this));
 
@@ -78,17 +64,14 @@ export default class DataDrawer {
     this.canvas.addEventListener("wheel", this._onWheel);
   }
 
-  init() {
+  #init() {
+    this.#renderer.clear();
     this.#renderer.drawGrid(20);
     this.#renderer.drawDirections();
   }
 
-  set visibleData(bars: BarData[]) {
-    this.#dataInView = bars;
-  }
-
   get visibleData() {
-    return this.#dataInView;
+    return this.#data.slice(this.#firstIndexInView, this.#lastIndexInView);
   }
 
   get isAllInView() {
@@ -99,26 +82,23 @@ export default class DataDrawer {
     this.#firstIndexInView = this.#firstIndexInView + Math.floor(val * 0.01);
     this.#lastIndexInView = this.#lastIndexInView + Math.floor(val * 0.01);
 
-    this.render(this.#firstIndexInView, this.#lastIndexInView);
+    this.renderData();
   }
 
-  zoom(zoom: number = 1, start: number = 0) {
-    const startRatio = start;
-    const endRatio = 1 - start;
+  zoom(zoom: number = 1, mousePos: number = 0) {
+    const startRatio = mousePos;
+    const endRatio = 1 - mousePos;
     const percentage = (zoom - 1) * 100;
 
     this.#firstIndexInView = percentage * this.#data.length * startRatio;
     this.#lastIndexInView =
       this.#data.length - this.#data.length * percentage * endRatio;
 
-    this.render(this.#firstIndexInView, this.#lastIndexInView);
+    this.renderData();
   }
 
-  render(startIndex: number = 0, endIndex: number = this.#data.length - 1) {
-    this.visibleData = this.#data.slice(startIndex, endIndex);
-
-    this.#renderer.clear();
-    this.init();
+  renderData() {
+    this.#init();
 
     const barsLength = this.visibleData.length;
     const canvasWidth = this.canvas.width;

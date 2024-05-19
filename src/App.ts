@@ -1,5 +1,5 @@
-import DataService from "./DataService.ts";
-import DataDrawer from "./DataDrawer.ts";
+import DataService from "./DataService/DataService.ts";
+import DataDrawer from "./DataDrawer/DataDrawer.ts";
 
 interface ElProps {
   src: string;
@@ -36,8 +36,7 @@ export class Chart extends HTMLElement {
   async connectedCallback() {
     const data = await this.#getData();
     this.drawer = new DataDrawer(data[0].Bars);
-    this.drawer.init();
-    this.drawer.render();
+    this.drawer.renderData();
     this.#mountEl();
   }
 

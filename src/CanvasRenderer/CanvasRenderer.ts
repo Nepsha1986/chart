@@ -25,14 +25,10 @@ export default class CanvasRenderer {
   }
 
   drawDirections() {
-    const ctx = this.context;
     const centerX = 10;
     const centerY = 10;
     const horLineLength = this.canvas.width - 15;
     const vertLineLength = this.canvas.height - 15;
-
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 2;
 
     this.drawArrow(centerX, centerY, centerX, vertLineLength);
     this.drawArrow(centerX, centerY, horLineLength, centerY);
@@ -45,7 +41,7 @@ export default class CanvasRenderer {
     const dy = toY - fromY;
     const angle = Math.atan2(dy, dx);
 
-    this.drawLine(fromX, fromY, toX, toY, "black");
+    this.drawLine(fromX, fromY, toX, toY, "#6b6b6b");
 
     ctx.beginPath();
     ctx.moveTo(toX, toY);
