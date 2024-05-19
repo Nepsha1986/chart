@@ -72,7 +72,7 @@ export default class CanvasRenderer {
     fromY: number,
     toX: number,
     toY: number,
-    color: string = "#ddd",
+    color: string = "#f1f1f1",
   ) {
     const ctx = this.context;
     ctx.strokeStyle = color;
