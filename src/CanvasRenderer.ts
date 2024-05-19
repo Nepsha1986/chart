@@ -19,6 +19,11 @@ export default class CanvasRenderer {
     this.context.scale(1, -1);
   }
 
+  clear() {
+    const ctx = this.context;
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
   drawDirections() {
     const ctx = this.context;
     const centerX = 10;
@@ -67,7 +72,7 @@ export default class CanvasRenderer {
     fromY: number,
     toX: number,
     toY: number,
-    color: string = "#ddd",
+    color: string = "#f1f1f1",
   ) {
     const ctx = this.context;
     ctx.strokeStyle = color;

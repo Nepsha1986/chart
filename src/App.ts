@@ -38,7 +38,7 @@ export class Chart extends HTMLElement {
     this.drawer = new DataDrawer(data[0].Bars);
     this.drawer.init();
     this.drawer.render();
-    this.#render();
+    this.#mountEl();
   }
 
   async #getData() {
@@ -49,7 +49,7 @@ export class Chart extends HTMLElement {
     }
   }
 
-  #render(): void {
+  #mountEl(): void {
     if (this.shadowRoot && this.#drawer) {
       this.shadowRoot.innerHTML = "";
       this.shadowRoot.appendChild(this.#drawer.canvas);
