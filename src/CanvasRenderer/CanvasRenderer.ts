@@ -30,11 +30,11 @@ export default class CanvasRenderer {
     const horLineLength = this.canvas.width - 15;
     const vertLineLength = this.canvas.height - 15;
 
-    this.drawArrow(centerX, centerY, centerX, vertLineLength);
-    this.drawArrow(centerX, centerY, horLineLength, centerY);
+    this.#drawArrow(centerX, centerY, centerX, vertLineLength);
+    this.#drawArrow(centerX, centerY, horLineLength, centerY);
   }
 
-  private drawArrow(fromX: number, fromY: number, toX: number, toY: number) {
+  #drawArrow(fromX: number, fromY: number, toX: number, toY: number) {
     const ctx = this.#context;
     const headLength = 10; // length of head in pixels
     const dx = toX - fromX;
@@ -69,8 +69,11 @@ export default class CanvasRenderer {
     toX: number,
     toY: number,
     color: string = "#f1f1f1",
+    type: "dashed" | "solid" = "solid",
   ) {
     const ctx = this.#context;
+    if (type === "dashed") ctx.setLineDash([15, 5]);
+
     ctx.strokeStyle = color;
     ctx.lineWidth = 1;
 
@@ -78,6 +81,7 @@ export default class CanvasRenderer {
     ctx.moveTo(fromX, fromY);
     ctx.lineTo(toX, toY);
     ctx.stroke();
+    ctx.setLineDash([]);
   }
 
   drawGrid(cellSize: number) {
@@ -97,5 +101,20 @@ export default class CanvasRenderer {
     const ctx = this.#context;
     ctx.fillStyle = color;
     ctx.fillRect(x, y, width, height);
+  }
+
+  drawText(
+    text: string,
+    xPos: number,
+    yPos: number,
+    color: string = "#3b3b3b",
+  ) {
+    const ctx = this.#context;
+    ctx.font = "normal 16px sans-serif";
+    ctx.fillStyle = color;
+    this.#context.scale(1, -1);
+
+    ctx.fillText(text, xPos, yPos);
+    this.#context.scale(1, -1);
   }
 }
