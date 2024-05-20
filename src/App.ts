@@ -1,5 +1,6 @@
 import DataService from "./DataService/DataService.ts";
 import DataDrawer from "./DataDrawer/DataDrawer.ts";
+import { DomManager } from "./DomManager/DomManager.ts";
 
 interface ElProps {
   src: string;
@@ -10,23 +11,14 @@ type ObservedAttr = keyof ElProps;
 export class Chart extends HTMLElement {
   #service: DataService;
   #drawer: DataDrawer | null = null;
+  #domManager: DomManager;
   static observedAttributes: ObservedAttr[] = ["src"];
 
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
     this.#service = new DataService(this.src);
-  }
-
-  set drawer(drawer: DataDrawer) {
-    this.#drawer = drawer;
-  }
-
-  get drawer(): DataDrawer {
-    if (this.#drawer === null) {
-      throw new Error("Drawer is not set");
-    }
-    return this.#drawer;
+    this.#domManager = new DomManager(this.shadowRoot!);
   }
 
   get src(): string {
@@ -34,10 +26,17 @@ export class Chart extends HTMLElement {
   }
 
   async connectedCallback() {
-    const data = await this.#getData();
-    this.drawer = new DataDrawer(data[0].Bars);
-    this.drawer.renderData();
-    this.#mountEl();
+    this.#domManager.mountSpinner();
+    try {
+      const data = await this.#getData();
+      this.#drawer = new DataDrawer(data[0].Bars);
+      this.#drawer.renderData();
+      this.#domManager.mountChart(this.#drawer);
+    } catch (e) {
+      this.#domManager.mountError();
+    } finally {
+      this.#domManager.unmountSpinner();
+    }
   }
 
   async #getData() {
@@ -45,13 +44,6 @@ export class Chart extends HTMLElement {
       return await this.#service.get();
     } catch (e) {
       throw new Error("Error while getting data");
-    }
-  }
-
-  #mountEl(): void {
-    if (this.shadowRoot && this.#drawer) {
-      this.shadowRoot.innerHTML = "";
-      this.shadowRoot.appendChild(this.#drawer.canvas);
     }
   }
 }

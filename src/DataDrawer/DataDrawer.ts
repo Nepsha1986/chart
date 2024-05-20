@@ -9,30 +9,47 @@ export default class DataDrawer {
   #lastIndexInView: number;
   #zoom: number;
   #mouseX: number;
+  #startPos: number = 0;
   readonly #data: BarData[];
 
   constructor(data: BarData[]) {
-    this.#renderer = new CanvasRenderer(
-      window.innerWidth - 20,
-      window.innerWidth / 2,
-    );
+    this.#renderer = new CanvasRenderer(1200, 600);
     this.#lastIndexInView = data.length - 1;
     this.#zoom = 1;
     this.#mouseX = 0;
     this.#data = data;
     this.canvas = this.#renderer.canvas;
-    this.canvas.addEventListener("mouseover", this._onMouseOver.bind(this));
 
+    this._onMouseDown = this._onMouseDown.bind(this);
+    this._onMouseMove = this._onMouseMove.bind(this);
+    this._onMouseUp = this._onMouseUp.bind(this);
     this._onWheel = this._onWheel.bind(this);
-    this._onMove = this._onMove.bind(this);
+
+    this.canvas.addEventListener("mousedown", this._onMouseDown);
+    this.canvas.addEventListener("wheel", this._onWheel);
   }
 
-  _onMove(event: MouseEvent) {
-    this.#mouseX = event.clientX;
+  private _onMouseDown(e: MouseEvent) {
+    document.body.style.cursor = "grab";
+    this.#startPos = e.offsetX;
+    this.canvas.addEventListener("mousemove", this._onMouseMove);
+    this.canvas.addEventListener("mouseup", this._onMouseUp);
   }
 
-  _onWheel(event: WheelEvent) {
+  private _onMouseMove(e: MouseEvent) {
+    this.scroll(this.#startPos - e.offsetX);
+  }
+
+  private _onMouseUp() {
+    document.body.style.cursor = "default";
+    this.canvas.removeEventListener("mousemove", this._onMouseMove);
+    this.canvas.removeEventListener("mouseup", this._onMouseUp);
+  }
+
+  private _onWheel(event: WheelEvent) {
     event.preventDefault();
+    this.#mouseX = event.clientX;
+
     const delta = event.deltaY * 0.000001;
     if (
       (this.visibleData.length < 20 && event.deltaY > 0) ||
@@ -41,27 +58,6 @@ export default class DataDrawer {
       return;
     this.#zoom = this.#zoom + delta;
     this.zoom(this.#zoom, this.#mouseX / this.canvas.width);
-  }
-
-  private _onMouseOver() {
-    let startPos = 0;
-
-    const onMouseMove = (e: MouseEvent) => {
-      this.scroll(startPos - e.offsetX);
-    };
-
-    const onMouseDown = (e: MouseEvent) => {
-      startPos = e.offsetX;
-      this.canvas.addEventListener("mousemove", onMouseMove);
-      const onMouseUp = () => {
-        this.canvas.removeEventListener("mousemove", onMouseMove);
-        this.canvas.removeEventListener("mouseup", onMouseUp);
-      };
-      this.canvas.addEventListener("mouseup", onMouseUp);
-    };
-
-    this.canvas.addEventListener("mousedown", onMouseDown);
-    this.canvas.addEventListener("wheel", this._onWheel);
   }
 
   #init() {
@@ -79,8 +75,14 @@ export default class DataDrawer {
   }
 
   scroll(val: number) {
-    this.#firstIndexInView = this.#firstIndexInView + Math.floor(val * 0.01);
-    this.#lastIndexInView = this.#lastIndexInView + Math.floor(val * 0.01);
+    this.#firstIndexInView = Math.max(
+      0,
+      this.#firstIndexInView + Math.floor(val * 0.01),
+    );
+    this.#lastIndexInView = Math.min(
+      this.#data.length,
+      this.#lastIndexInView + Math.floor(val * 0.01),
+    );
 
     this.renderData();
   }
@@ -90,9 +92,14 @@ export default class DataDrawer {
     const endRatio = 1 - mousePos;
     const percentage = (zoom - 1) * 100;
 
-    this.#firstIndexInView = percentage * this.#data.length * startRatio;
-    this.#lastIndexInView =
-      this.#data.length - this.#data.length * percentage * endRatio;
+    this.#firstIndexInView = Math.max(
+      0,
+      percentage * this.#data.length * startRatio,
+    );
+    this.#lastIndexInView = Math.min(
+      this.#data.length,
+      this.#data.length - this.#data.length * percentage * endRatio,
+    );
 
     this.renderData();
   }

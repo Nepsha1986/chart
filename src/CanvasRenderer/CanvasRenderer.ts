@@ -1,26 +1,26 @@
 export default class CanvasRenderer {
   canvas: HTMLCanvasElement;
-  private readonly context: CanvasRenderingContext2D;
+  readonly #context: CanvasRenderingContext2D;
 
   constructor(width: number, height: number) {
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
 
-    this.context = canvas.getContext("2d")!;
+    this.#context = canvas.getContext("2d")!;
     this.canvas = canvas;
-    this.changeOrigin();
+    this.#changeOrigin();
 
     return this;
   }
 
-  private changeOrigin() {
-    this.context.translate(0, this.canvas.height);
-    this.context.scale(1, -1);
+  #changeOrigin() {
+    this.#context.translate(0, this.canvas.height);
+    this.#context.scale(1, -1);
   }
 
   clear() {
-    const ctx = this.context;
+    const ctx = this.#context;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
@@ -35,7 +35,7 @@ export default class CanvasRenderer {
   }
 
   private drawArrow(fromX: number, fromY: number, toX: number, toY: number) {
-    const ctx = this.context;
+    const ctx = this.#context;
     const headLength = 10; // length of head in pixels
     const dx = toX - fromX;
     const dy = toY - fromY;
@@ -70,7 +70,7 @@ export default class CanvasRenderer {
     toY: number,
     color: string = "#f1f1f1",
   ) {
-    const ctx = this.context;
+    const ctx = this.#context;
     ctx.strokeStyle = color;
     ctx.lineWidth = 1;
 
@@ -94,7 +94,7 @@ export default class CanvasRenderer {
   }
 
   drawBar(x: number, y: number, width: number, height: number, color: string) {
-    const ctx = this.context;
+    const ctx = this.#context;
     ctx.fillStyle = color;
     ctx.fillRect(x, y, width, height);
   }
