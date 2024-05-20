@@ -1,10 +1,11 @@
 import CanvasRenderer from "../CanvasRenderer/CanvasRenderer.ts";
 import { BarData } from "../DataService/DataService.ts";
-import { getLowHigh, getMinMax } from "./_utils";
+import { formatDate, getLowHigh, getMinMax } from "./_utils";
 
 export default class DataDrawer {
   canvas: HTMLCanvasElement;
   #renderer: CanvasRenderer;
+  readonly #datesSegments: number = 4;
   #firstIndexInView: number = 0;
   #lastIndexInView: number;
   #zoom: number;
@@ -60,21 +61,21 @@ export default class DataDrawer {
     this.zoom(this.#zoom, this.#mouseX / this.canvas.width);
   }
 
-  #init() {
+  #init(): void {
     this.#renderer.clear();
-    this.#renderer.drawGrid(20);
-    this.#renderer.drawDirections();
+    //this.#renderer.drawGrid(20);
+    //this.#renderer.drawDirections();
   }
 
-  get visibleData() {
+  get visibleData(): BarData[] {
     return this.#data.slice(this.#firstIndexInView, this.#lastIndexInView);
   }
 
-  get isAllInView() {
+  get isAllInView(): boolean {
     return this.#data.length === this.visibleData.length;
   }
 
-  scroll(val: number) {
+  scroll(val: number): void {
     this.#firstIndexInView = Math.max(
       0,
       this.#firstIndexInView + Math.floor(val * 0.01),
@@ -87,7 +88,7 @@ export default class DataDrawer {
     this.renderData();
   }
 
-  zoom(zoom: number = 1, mousePos: number = 0) {
+  zoom(zoom: number = 1, mousePos: number = 0): void {
     const startRatio = mousePos;
     const endRatio = 1 - mousePos;
     const percentage = (zoom - 1) * 100;
@@ -104,13 +105,47 @@ export default class DataDrawer {
     this.renderData();
   }
 
-  renderData() {
+  #renderDates(): void {
+    const step = Math.floor(this.visibleData.length / this.#datesSegments);
+    let dates: number[] = [];
+
+    for (let i = 0; i <= this.#datesSegments; i++) {
+      const index = Math.min(i * step, this.visibleData.length - 1);
+      dates.push(this.visibleData[index].Time);
+    }
+
+    dates.forEach((time, index) => {
+      let xPos;
+
+      if (this.visibleData.length < 50) {
+        xPos = (time - this.visibleData[0].Time) * this.#xRatio;
+      } else {
+        xPos = (this.canvas.width / this.#datesSegments) * index;
+      }
+
+      this.#renderer.drawLine(
+        xPos,
+        0,
+        xPos,
+        this.canvas.height,
+        "#9f9f9f",
+        "dashed",
+      );
+      this.#renderer.drawText(formatDate(time), xPos + 10, -15);
+    });
+  }
+
+  get #xRatio(): number {
+    const canvasWidth = this.canvas.width;
+    const barsLength = this.visibleData.length;
+    return canvasWidth / (barsLength * 60);
+  }
+
+  renderData(): void {
     this.#init();
 
-    const barsLength = this.visibleData.length;
-    const canvasWidth = this.canvas.width;
     const canvasHeight = this.canvas.height;
-    const xRatio = canvasWidth / (barsLength * 60);
+    const xRatio = this.#xRatio;
 
     const [minY, maxY] = getLowHigh(this.visibleData);
     const [minX, _] = getMinMax(this.visibleData);
@@ -135,5 +170,7 @@ export default class DataDrawer {
         color,
       );
     });
+
+    this.#renderDates();
   }
 }
