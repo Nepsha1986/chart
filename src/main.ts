@@ -15,7 +15,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   	<canvas-chart src=${dataSrc2}></canvas-chart>
   
 		<canvas-chart src='/dummy-src'></canvas-chart>
-		<canvas-chart config='{"errorMessage":"I can add any error message here wery easily if fetchin data fails!"}' src='/dummy-src'></canvas-chart>
+		<canvas-chart config='{"errorMessage":"I can easily add any error message here if fetching data fails!"}' src='/dummy-src'></canvas-chart>
 	</div>
 	
 	<p>Please read README.MD for an explanation</p>
