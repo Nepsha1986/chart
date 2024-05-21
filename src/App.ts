@@ -8,10 +8,15 @@ interface ElProps {
 
 type ObservedAttr = keyof ElProps;
 
+type ComponentConfig = {
+  errorMessage: string;
+};
+
 export class Chart extends HTMLElement {
   #service: DataService;
   #drawer: DataDrawer | null = null;
   #domManager: DomManager;
+  config?: ComponentConfig;
   static observedAttributes: ObservedAttr[] = ["src"];
 
   constructor() {
@@ -26,14 +31,20 @@ export class Chart extends HTMLElement {
   }
 
   async connectedCallback() {
-    this.#domManager.mountSpinner();
+    const dataConfig = this.getAttribute("config");
+
+    if (dataConfig) {
+      this.config = JSON.parse(dataConfig);
+    }
+
     try {
+      this.#domManager.mountSpinner();
       const data = await this.#getData();
       this.#drawer = new DataDrawer(data[0]);
       this.#drawer.renderData();
       this.#domManager.mountChart(this.#drawer);
     } catch (e) {
-      this.#domManager.mountError();
+      this.#domManager.mountError(this.config?.errorMessage);
     } finally {
       this.#domManager.unmountSpinner();
     }
