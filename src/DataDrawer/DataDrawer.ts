@@ -5,12 +5,13 @@ import { formatToReadableDate } from "./_utils";
 export default class DataDrawer {
   canvas: HTMLCanvasElement;
   #renderer: CanvasRenderer;
-  readonly #datesSegments: number = 4;
-  #firstIndexInView: number = 0;
+  #wheelSmoothRatio = 0.000001;
+  readonly #datesSegments = 4;
+  #firstIndexInView = 0;
   #lastIndexInView: number;
   #zoom: number;
   #mouseX: number;
-  #startPos: number = 0;
+  #startPos = 0;
   readonly #data: BarData[];
   readonly #chunkStart: number;
 
@@ -49,16 +50,19 @@ export default class DataDrawer {
     this.canvas.removeEventListener("mouseup", this._onMouseUp);
   }
 
+  #achievedZoomLimits(deltaY: number): boolean {
+    return (
+      (this.visibleData.length < 20 && deltaY > 0) ||
+      (this.isAllInView && deltaY < 0)
+    );
+  }
+
   private _onWheel(event: WheelEvent) {
     event.preventDefault();
     this.#mouseX = event.offsetX;
 
-    const delta = event.deltaY * 0.000001;
-    if (
-      (this.visibleData.length < 20 && event.deltaY > 0) ||
-      (this.isAllInView && event.deltaY < 0)
-    )
-      return;
+    const delta = event.deltaY * this.#wheelSmoothRatio;
+    if (this.#achievedZoomLimits(delta)) return;
     this.#zoom = this.#zoom + delta;
     this.zoom(this.#zoom, this.#mouseX / this.canvas.width);
   }
@@ -140,6 +144,7 @@ export default class DataDrawer {
     }
   }
 
+  //TODO: Can be improved by splitting rendering of lines and numbers, this will fix a bug with vertical lines overlaps bars
   #renderDates(): void {
     const step = Math.floor(this.visibleData.length / this.#datesSegments);
     let dates: number[] = [];
@@ -180,6 +185,7 @@ export default class DataDrawer {
     return canvasWidth / (barsLength * 60);
   }
 
+  //TODO: Can be improved by splitting rendering of lines and numbers, this will fix a bug with horizontal lines overlaps bars
   renderData(): void {
     this.#init();
 
