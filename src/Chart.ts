@@ -4,19 +4,21 @@ import { DomManager } from "./DomManager/DomManager.ts";
 
 interface ElProps {
   src: string;
+  config: ComponentConfig;
 }
-
-type ObservedAttr = keyof ElProps;
 
 type ComponentConfig = {
   errorMessage: string;
 };
+
+type ObservedAttr = keyof ElProps;
 
 export class Chart extends HTMLElement {
   #service: DataService;
   #drawer: DataDrawer | null = null;
   #domManager: DomManager;
   config?: ComponentConfig;
+  // TODO: Research how to implement auto-update
   static observedAttributes: ObservedAttr[] = ["src"];
 
   constructor() {

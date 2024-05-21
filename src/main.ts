@@ -1,4 +1,4 @@
-import { Chart } from "./App.ts";
+import { Chart } from "./Chart.ts";
 import "./style.css";
 
 customElements.define("canvas-chart", Chart);

@@ -16,3 +16,4 @@ To run the development server, use the following command:
 4. Reusability and customization of the component can be achieved by passing a "config" attribute. As an example, I've added the ability to pass a custom error message (you can see it on the screen when running in dev mode).
 5. I didn't attempt to make this component 100% production-ready, focusing instead on implementing basic functionality and structure.
 6. I didn't create a production build to save time.
+7. I left some TODO notifications in the codebase where I saw that the component lacks functionality, but its implementation will require some research, take extra time, or I have doubts about the correct implementation of the approach.
