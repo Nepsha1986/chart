@@ -1,6 +1,6 @@
 import CanvasRenderer from "../CanvasRenderer/CanvasRenderer.ts";
-import { BarData } from "../DataService/DataService.ts";
-import { formatDate, getLowHigh, getMinMax } from "./_utils";
+import { BarData, DataModel } from "../DataService/DataService.ts";
+import { formatToReadableDate } from "./_utils";
 
 export default class DataDrawer {
   canvas: HTMLCanvasElement;
@@ -12,13 +12,15 @@ export default class DataDrawer {
   #mouseX: number;
   #startPos: number = 0;
   readonly #data: BarData[];
+  readonly #chunkStart: number;
 
-  constructor(data: BarData[]) {
+  constructor(data: DataModel) {
     this.#renderer = new CanvasRenderer(1200, 600);
-    this.#lastIndexInView = data.length - 1;
+    this.#data = data.Bars;
+    this.#chunkStart = data.ChunkStart;
     this.#zoom = 1;
     this.#mouseX = 0;
-    this.#data = data;
+    this.#lastIndexInView = this.#data.length - 1;
     this.canvas = this.#renderer.canvas;
 
     this._onMouseDown = this._onMouseDown.bind(this);
@@ -49,7 +51,7 @@ export default class DataDrawer {
 
   private _onWheel(event: WheelEvent) {
     event.preventDefault();
-    this.#mouseX = event.clientX;
+    this.#mouseX = event.offsetX;
 
     const delta = event.deltaY * 0.000001;
     if (
@@ -63,8 +65,6 @@ export default class DataDrawer {
 
   #init(): void {
     this.#renderer.clear();
-    //this.#renderer.drawGrid(20);
-    //this.#renderer.drawDirections();
   }
 
   get visibleData(): BarData[] {
@@ -105,6 +105,41 @@ export default class DataDrawer {
     this.renderData();
   }
 
+  get priceRange(): [number, number] {
+    const bars = this.visibleData;
+    return bars.reduce(
+      ([lowestLow, highestHigh], bar) => [
+        Math.min(lowestLow, bar.Low),
+        Math.max(highestHigh, bar.High),
+      ],
+      [bars[0].Low, bars[0].High],
+    );
+  }
+
+  get timeRange(): [number, number] {
+    const bars = this.visibleData;
+    return [bars[0].Time, bars[bars.length - 1].Time];
+  }
+
+  #renderPrices(): void {
+    const [minPrice, maxPrice] = this.priceRange;
+    const step = Math.floor(this.canvas.height / 20);
+
+    for (let i = 0; i <= 20; i++) {
+      const y = i * step;
+      const price = maxPrice - (y / this.canvas.height) * (maxPrice - minPrice);
+
+      this.#renderer.drawLine(0, y, this.canvas.width, y, "#9f9f9f", "dashed");
+
+      this.#renderer.drawText(
+        price.toFixed(4),
+        this.canvas.width - 70,
+        y - 3,
+        "#000",
+      );
+    }
+  }
+
   #renderDates(): void {
     const step = Math.floor(this.visibleData.length / this.#datesSegments);
     let dates: number[] = [];
@@ -131,7 +166,11 @@ export default class DataDrawer {
         "#9f9f9f",
         "dashed",
       );
-      this.#renderer.drawText(formatDate(time), xPos + 10, -15);
+      this.#renderer.drawText(
+        formatToReadableDate(time + this.#chunkStart),
+        xPos + 10,
+        this.canvas.height - 10,
+      );
     });
   }
 
@@ -147,8 +186,8 @@ export default class DataDrawer {
     const canvasHeight = this.canvas.height;
     const xRatio = this.#xRatio;
 
-    const [minY, maxY] = getLowHigh(this.visibleData);
-    const [minX, _] = getMinMax(this.visibleData);
+    const [minY, maxY] = this.priceRange;
+    const [minX] = this.timeRange;
 
     const yRatio = canvasHeight / (maxY - minY);
 
@@ -172,5 +211,6 @@ export default class DataDrawer {
     });
 
     this.#renderDates();
+    this.#renderPrices();
   }
 }

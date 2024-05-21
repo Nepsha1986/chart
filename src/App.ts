@@ -29,7 +29,7 @@ export class Chart extends HTMLElement {
     this.#domManager.mountSpinner();
     try {
       const data = await this.#getData();
-      this.#drawer = new DataDrawer(data[0].Bars);
+      this.#drawer = new DataDrawer(data[0]);
       this.#drawer.renderData();
       this.#domManager.mountChart(this.#drawer);
     } catch (e) {

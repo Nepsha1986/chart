@@ -9,7 +9,6 @@ export default class CanvasRenderer {
 
     this.#context = canvas.getContext("2d")!;
     this.canvas = canvas;
-    this.#changeOrigin();
 
     return this;
   }
@@ -24,45 +23,6 @@ export default class CanvasRenderer {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
-  drawDirections() {
-    const centerX = 10;
-    const centerY = 10;
-    const horLineLength = this.canvas.width - 15;
-    const vertLineLength = this.canvas.height - 15;
-
-    this.#drawArrow(centerX, centerY, centerX, vertLineLength);
-    this.#drawArrow(centerX, centerY, horLineLength, centerY);
-  }
-
-  #drawArrow(fromX: number, fromY: number, toX: number, toY: number) {
-    const ctx = this.#context;
-    const headLength = 10; // length of head in pixels
-    const dx = toX - fromX;
-    const dy = toY - fromY;
-    const angle = Math.atan2(dy, dx);
-
-    this.drawLine(fromX, fromY, toX, toY, "#6b6b6b");
-
-    ctx.beginPath();
-    ctx.moveTo(toX, toY);
-    ctx.lineTo(
-      toX - headLength * Math.cos(angle - Math.PI / 6),
-      toY - headLength * Math.sin(angle - Math.PI / 6),
-    );
-    ctx.lineTo(
-      toX - headLength * Math.cos(angle + Math.PI / 6),
-      toY - headLength * Math.sin(angle + Math.PI / 6),
-    );
-    ctx.lineTo(toX, toY);
-    ctx.lineTo(
-      toX - headLength * Math.cos(angle - Math.PI / 6),
-      toY - headLength * Math.sin(angle - Math.PI / 6),
-    );
-    ctx.stroke();
-    ctx.fillStyle = "black";
-    ctx.fill();
-  }
-
   drawLine(
     fromX: number,
     fromY: number,
@@ -72,7 +32,8 @@ export default class CanvasRenderer {
     type: "dashed" | "solid" = "solid",
   ) {
     const ctx = this.#context;
-    if (type === "dashed") ctx.setLineDash([15, 5]);
+    this.#changeOrigin();
+    if (type === "dashed") ctx.setLineDash([10, 3]);
 
     ctx.strokeStyle = color;
     ctx.lineWidth = 1;
@@ -82,25 +43,15 @@ export default class CanvasRenderer {
     ctx.lineTo(toX, toY);
     ctx.stroke();
     ctx.setLineDash([]);
-  }
-
-  drawGrid(cellSize: number) {
-    const width = this.canvas.width;
-    const height = this.canvas.height;
-
-    for (let x = 0; x <= width; x += cellSize) {
-      this.drawLine(x, 0, x, height);
-    }
-
-    for (let y = 0; y <= height; y += cellSize) {
-      this.drawLine(0, y, width, y);
-    }
+    this.#changeOrigin();
   }
 
   drawBar(x: number, y: number, width: number, height: number, color: string) {
     const ctx = this.#context;
+    this.#changeOrigin();
     ctx.fillStyle = color;
     ctx.fillRect(x, y, width, height);
+    this.#changeOrigin();
   }
 
   drawText(
@@ -112,9 +63,7 @@ export default class CanvasRenderer {
     const ctx = this.#context;
     ctx.font = "normal 16px sans-serif";
     ctx.fillStyle = color;
-    this.#context.scale(1, -1);
 
     ctx.fillText(text, xPos, yPos);
-    this.#context.scale(1, -1);
   }
 }
